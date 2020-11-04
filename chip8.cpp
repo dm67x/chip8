@@ -18,12 +18,10 @@ Display::Display(SDL_Renderer* renderer) {
         return;
     }
 
-    for (int i = 0; i < 2048; i++) {
-        data[i] = false;
-    }
+    clear();
 }
 
-Display::~Display() {
+void Display::dispose() {
     SDL_DestroyTexture(screen);
 }
 
@@ -33,6 +31,12 @@ void Display::set(int x, int y, bool value) {
 
 bool Display::get(int x, int y) const {
     return data[y * 64 + x];
+}
+
+void Display::clear() {
+    for (int i = 0; i < 2048; i++) {
+        data[i] = false;
+    }
 }
 
 void Display::render() const {
@@ -59,32 +63,108 @@ void Display::render() const {
 }
 
 //=================================[  CPU  ]=================================//
-Cpu::Cpu() {
+void opcode_0(Cpu& cpu) {
+    u16 opcode = cpu.get_opcode();
+    u16 who = opcode_kk(opcode);
+    if (who == 0x00E0) {
+        cpu.display.clear();
+    } else if (who == 0x00EE) {
+        // ret
+    }
+    cpu.PC += 2;
+}
+
+void opcode_1(Cpu& cpu) {
+
+}
+
+void opcode_2(Cpu& cpu) {
+
+}
+
+void opcode_3(Cpu& cpu) {
+
+}
+
+void opcode_4(Cpu& cpu) {
+
+}
+
+void opcode_5(Cpu& cpu) {
+
+}
+
+void opcode_6(Cpu& cpu) {
+
+}
+
+void opcode_7(Cpu& cpu) {
+
+}
+
+void opcode_8(Cpu& cpu) {
+
+}
+
+void opcode_9(Cpu& cpu) {
+
+}
+
+void opcode_A(Cpu& cpu) {
+
+}
+
+void opcode_B(Cpu& cpu) {
+
+}
+
+void opcode_C(Cpu& cpu) {
+
+}
+
+void opcode_D(Cpu& cpu) {
+
+}
+
+void opcode_E(Cpu& cpu) {
+
+}
+
+void opcode_F(Cpu& cpu) {
+
+}
+
+void (*Cpu::instructions[16])(Cpu&) = {
+    opcode_0, opcode_1, opcode_2, opcode_3, opcode_4, opcode_5, opcode_6,
+    opcode_7, opcode_8, opcode_9, opcode_A, opcode_B, opcode_C, opcode_D,
+    opcode_E, opcode_F
+};
+
+Cpu::Cpu(Display& diplay) : display(display) {
     reset();
 }
 
 void Cpu::reset() {
-    u8 memory[4096];
-    u8 V[16];
-    u16 I;
-    u8 DT;
-    u8 ST;
-    u16 PC;
-    u8 SP;
-    u16 stack[16];
-
-    std::memset(memory, 0x00, 4096);
-    std::memset(V, 0x00, 16);
+    std::memset(memory, 0, sizeof(memory));
+    std::memset(V, 0, sizeof(V));
     I = 0x0000;
     DT = 0x00;
     ST = 0x00;
     PC = 0x0200;
     SP = 0x00;
-    std::memset(stack, 0x0000, 16);
+    std::memset(stack, 0, sizeof(stack));
 }
 
-void Cpu::cycle(Display& display) {
+void Cpu::cycle() {
+    u16 opcode = get_opcode();
+    u16 type = opcode_type(opcode);
+    (*instructions[type])(*this);
+}
 
+u16 Cpu::get_opcode() {
+    u16 m1 = static_cast<u16>(memory[PC] << 4);
+    u16 m2 = static_cast<u16>(memory[PC + 1]);
+    return m1 | m2;
 }
 
 //=================================[ MA_IN ]=================================//
@@ -122,8 +202,8 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    Display* display = new Display(renderer);
-    Cpu cpu;
+    Display display(renderer);
+    Cpu cpu(display);
 
     SDL_Event event;
     while (true) {
@@ -131,14 +211,14 @@ int main(int argc, char** argv) {
         if (event.type == SDL_QUIT)
             break;
 
-        cpu.cycle(*display);
+        cpu.cycle();
 
         SDL_RenderClear(renderer);
-        display->render();
+        display.render();
         SDL_RenderPresent(renderer);
     }
 
-    delete display;
+    display.dispose();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
