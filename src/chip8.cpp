@@ -274,6 +274,7 @@ void opcode_F(Cpu& cpu, u16 opcode) {
     u16 x = opcode_x(opcode);
     assert(x >= 0 && x < 16);
     u16 type = opcode_kk(opcode);
+
     switch (type) {
         case 0x0007:
             cpu.V[x] = cpu.DT;
@@ -283,7 +284,6 @@ void opcode_F(Cpu& cpu, u16 opcode) {
         case 0x000A:
             for (u8 i = 0; i < 16; i++) {
                 if (cpu.keys[i]) {
-                    cpu.keys[i] = false;
                     cpu.V[x] = i;
                     cpu.PC += 2;
                 }
@@ -311,7 +311,7 @@ void opcode_F(Cpu& cpu, u16 opcode) {
             break;
 
         case 0x0033:
-            cpu.memory[cpu.I] = cpu.V[x] / 100;
+            cpu.memory[cpu.I] = (cpu.V[x] % 1000) / 100;
             cpu.memory[cpu.I + 1] = (cpu.V[x] % 100) / 10;
             cpu.memory[cpu.I + 2] = cpu.V[x] % 10;
             cpu.PC += 2;
@@ -321,6 +321,7 @@ void opcode_F(Cpu& cpu, u16 opcode) {
             for (u16 i = 0; i <= x; i++) {
                 cpu.memory[cpu.I + i] = cpu.V[i];
             }
+            cpu.I += x + 1;
             cpu.PC += 2;
             break;
 
@@ -328,6 +329,7 @@ void opcode_F(Cpu& cpu, u16 opcode) {
             for (u16 i = 0; i <= x; i++) {
                 cpu.V[i] = cpu.memory[cpu.I + i];
             }
+            cpu.I += x + 1;
             cpu.PC += 2;
             break;
 
@@ -358,22 +360,25 @@ void Cpu::reset() {
     std::memset(stack, 0, sizeof(stack));
     flag = Flags::NONE;
     std::memset(keys, false, sizeof(keys));
-    time = SDL_GetTicks();
+}
+
+void Cpu::tick() {
+    if (DT > 0) {
+        DT--;
+    }
+
+    if (ST > 0) {
+        ST--;
+        if (ST == 0) {
+            // BEEP!
+        }
+    }
 }
 
 void Cpu::cycle() {
-    Uint32 current_time = SDL_GetTicks();
-    Uint32 elapsed_time = current_time - time;
-    if (elapsed_time >= CYCLE_MS) {
-        if (DT > 0) {
-            DT--;
-        }
-
-        u16 opcode = get_opcode();
-        u16 type = opcode_type(opcode);
-        (*instructions[type])(*this, opcode);
-        time = current_time;
-    }
+    u16 opcode = get_opcode();
+    u16 type = opcode_type(opcode);
+    (*instructions[type])(*this, opcode);
 }
 
 u16 Cpu::get_opcode() {
@@ -408,7 +413,7 @@ void Cpu::set_keyup(int key) {
     }
 }
 
-int map_keys(int scancode) {
+int map_keys(SDL_Scancode scancode) {
     switch (scancode) {
         case SDL_SCANCODE_0: return 0;
         case SDL_SCANCODE_1: return 1;
@@ -474,18 +479,37 @@ int main(int argc, char** argv) {
     Cpu cpu(display);
     cpu.open(argv[1]);
 
+    Uint32 old_time = SDL_GetTicks();
+    Uint32 current_time = 0;
+
     SDL_Event event;
-    while (true) {
-        SDL_PollEvent(&event);
-        if (event.type == SDL_QUIT)
-            break;
-        else if (event.type == SDL_KEYDOWN) {
-            cpu.set_keydown(map_keys(event.key.keysym.scancode));
-        } else if (event.type == SDL_KEYUP) {
-            cpu.set_keyup(map_keys(event.key.keysym.scancode));
+    bool quit = false;
+    while (!quit) {
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+                case SDL_QUIT: 
+                    quit = true; 
+                    break;
+
+                case SDL_KEYDOWN:
+                    cpu.set_keydown(map_keys(event.key.keysym.scancode));
+                    break;
+
+                case SDL_KEYUP:
+                    cpu.set_keyup(map_keys(event.key.keysym.scancode));
+                    break;
+
+                default: break;
+            }
         }
 
         cpu.cycle();
+
+        current_time = SDL_GetTicks();
+        if (current_time - old_time >= CYCLE_MS) {
+            cpu.tick();
+            old_time = current_time;
+        }
 
         SDL_RenderClear(renderer);
         display.render();

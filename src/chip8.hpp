@@ -48,7 +48,6 @@ class Cpu
     Display& display;
     Flags flag;
     bool keys[16];
-    Uint32 time;
 
 private:
     static void (*instructions[16])(Cpu&, u16);
@@ -75,6 +74,7 @@ private:
 public:
     Cpu(Display& display);
     void reset();
+    void tick();
     void cycle();
     void open(const std::string& filename);
     void set_keydown(int key);
