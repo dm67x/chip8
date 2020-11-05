@@ -139,7 +139,7 @@ void opcode_7(Cpu& cpu, u16 opcode) {
     u16 x = opcode_x(opcode);
     u8 kk = opcode_kk(opcode);
     assert(x >= 0 && x < 16);
-    cpu.V[x] = (cpu.V[x] + kk) % 255;
+    cpu.V[x] = opcode_kk((cpu.V[x] + kk));
     cpu.PC += 2;
 }
 
@@ -160,11 +160,7 @@ void opcode_8(Cpu& cpu, u16 opcode) {
         cpu.V[x] ^= cpu.V[y];
     } else if (n == 4) {
         u16 value = cpu.V[x] + cpu.V[y];
-        if (value > 255) {
-            cpu.V[15] = 1;
-        } else {
-            cpu.V[15] = 0;
-        }
+        cpu.V[15] = (value > 255) ? 1 : 0;
         cpu.V[x] = opcode_kk(value);
         cpu.flag = Flags::CARRY;
     } else if (n == 5) {
@@ -252,13 +248,88 @@ void opcode_D(Cpu& cpu, u16 opcode) {
 }
 
 void opcode_E(Cpu& cpu, u16 opcode) {
-    (void)cpu;
-    (void)opcode;
+    u16 x = opcode_x(opcode);
+    assert(x >= 0 && x < 16);
+    u16 type = opcode_kk(opcode);
+    switch (type) {
+        case 0x009E:
+            cpu.PC += cpu.keys[cpu.V[x]] ? 2 : 0;
+            break;
+
+        case 0x00A1:
+            cpu.PC += cpu.keys[cpu.V[x]] ? 0 : 2;
+            break;
+
+        default: 
+            unvalid_instr(); 
+            break;
+    }
+    cpu.PC += 2;
 }
 
 void opcode_F(Cpu& cpu, u16 opcode) {
-    (void)cpu;
-    (void)opcode;
+    u16 x = opcode_x(opcode);
+    assert(x >= 0 && x < 16);
+    u16 type = opcode_kk(opcode);
+    switch (type) {
+        case 0x0007:
+            cpu.V[x] = cpu.DT;
+            cpu.PC += 2;
+            break;
+
+        case 0x000A:
+            if (cpu.key_pressed_index >= 0) {
+                cpu.V[x] = cpu.key_pressed_index;
+                cpu.key_pressed_index = -1;
+                cpu.PC += 2;
+            }
+            break;
+
+        case 0x0015:
+            cpu.DT = cpu.V[x];
+            cpu.PC += 2;
+            break;
+
+        case 0x0018:
+            cpu.ST = cpu.V[x];
+            cpu.PC += 2;
+            break;
+
+        case 0x001E:
+            cpu.I += cpu.V[x];
+            cpu.PC += 2;
+            break;
+
+        case 0x0029:
+            // TODO: sprite location
+            cpu.PC += 2;
+            break;
+
+        case 0x0033:
+            cpu.memory[cpu.I] = cpu.V[x] / 100;
+            cpu.memory[cpu.I + 1] = (cpu.V[x] % 100) / 10;
+            cpu.memory[cpu.I + 2] = cpu.V[x] % 10;
+            cpu.PC += 2;
+            break;
+
+        case 0x0055:
+            for (u16 i = 0; i <= x; i++) {
+                cpu.memory[cpu.I + i] = cpu.V[i];
+            }
+            cpu.PC += 2;
+            break;
+
+        case 0x0065:
+            for (u16 i = 0; i <= x; i++) {
+                cpu.V[i] = cpu.memory[cpu.I + i];
+            }
+            cpu.PC += 2;
+            break;
+
+        default:
+            unvalid_instr();
+            break;
+    }
 }
 
 void (*Cpu::instructions[16])(Cpu&, u16) = {
@@ -281,6 +352,7 @@ void Cpu::reset() {
     SP = 0x00;
     std::memset(stack, 0, sizeof(stack));
     flag = Flags::NONE;
+    std::memset(keys, false, sizeof(keys));
 }
 
 void Cpu::cycle() {

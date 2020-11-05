@@ -47,6 +47,8 @@ class Cpu
     u16 stack[16];
     Display& display;
     Flags flag;
+    bool keys[16];
+    int key_pressed_index;
 
 private:
     static void (*instructions[16])(Cpu&, u16);
