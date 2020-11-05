@@ -1,5 +1,6 @@
 #include "chip8.hpp"
 #include <cstring>
+#include <cassert>
 
 //=================================[DISPLAY]=================================//
 Display::Display(SDL_Renderer* renderer) {
@@ -66,36 +67,73 @@ void Display::render() const {
 void opcode_0(Cpu& cpu) {
     u16 opcode = cpu.get_opcode();
     u16 who = opcode_kk(opcode);
-    if (who == 0x00E0) {
-        cpu.display.clear();
-    } else if (who == 0x00EE) {
-        // ret
+    switch (who) {
+        case 0x00E0:
+            cpu.display.clear();
+            cpu.PC += 2;
+            break;
+
+        case 0x00EE:
+            assert(cpu.SP > 0);
+            cpu.PC = cpu.stack[cpu.SP--];
+            cpu.PC += 2;
+            break;
+
+        default: break;
+    }
+}
+
+void opcode_1(Cpu& cpu) {
+    cpu.PC = opcode_addr(cpu.get_opcode());
+}
+
+void opcode_2(Cpu& cpu) {
+    assert(cpu.SP < 16);
+    cpu.stack[cpu.SP++] = cpu.PC;
+    cpu.PC = opcode_addr(cpu.get_opcode());
+}
+
+void opcode_3(Cpu& cpu) {
+    u16 x = opcode_x(cpu.get_opcode());
+    u8 kk = opcode_kk(cpu.get_opcode());
+    assert(x >= 0 && x < 16);
+    u8 value = cpu.V[x];
+    if (value == kk) {
+        cpu.PC += 2;
     }
     cpu.PC += 2;
 }
 
-void opcode_1(Cpu& cpu) {
-
-}
-
-void opcode_2(Cpu& cpu) {
-
-}
-
-void opcode_3(Cpu& cpu) {
-
-}
-
 void opcode_4(Cpu& cpu) {
-
+    u16 x = opcode_x(cpu.get_opcode());
+    u8 kk = opcode_kk(cpu.get_opcode());
+    assert(x >= 0 && x < 16);
+    u8 value = cpu.V[x];
+    if (value != kk) {
+        cpu.PC += 2;
+    }
+    cpu.PC += 2;
 }
 
 void opcode_5(Cpu& cpu) {
-
+    u16 x = opcode_x(cpu.get_opcode());
+    u16 y = opcode_y(cpu.get_opcode());
+    assert(x >= 0 && x < 16);
+    assert(y >= 0 && y < 16);
+    u8 vx = cpu.V[x];
+    u8 vy = cpu.V[y];
+    if (vx == vy) {
+        cpu.PC += 2;
+    }
+    cpu.PC += 2;
 }
 
 void opcode_6(Cpu& cpu) {
-
+    u16 x = opcode_x(cpu.get_opcode());
+    u8 kk = opcode_kk(cpu.get_opcode());
+    assert(x >= 0 && x < 16);
+    cpu.V[x] = kk;
+    cpu.PC += 2;
 }
 
 void opcode_7(Cpu& cpu) {
