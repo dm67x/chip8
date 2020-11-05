@@ -278,10 +278,11 @@ void opcode_F(Cpu& cpu, u16 opcode) {
             break;
 
         case 0x000A:
-            if (cpu.key_pressed_index >= 0) {
-                cpu.V[x] = cpu.key_pressed_index;
-                cpu.key_pressed_index = -1;
-                cpu.PC += 2;
+            for (u8 i = 0; i < 16; i++) {
+                if (cpu.keys[i]) {
+                    cpu.V[x] = i;
+                    cpu.PC += 2;
+                }
             }
             break;
 
@@ -381,6 +382,40 @@ void Cpu::open(const std::string& filename) {
     file.close();
 }
 
+void Cpu::set_keydown(int key) {
+    if (key >= 0) {
+        keys[key] = true;
+    }
+}
+
+void Cpu::set_keyup(int key) {
+    if (key >= 0) {
+        keys[key] = false;
+    }
+}
+
+int map_keys(int scancode) {
+    switch (scancode) {
+        case SDL_SCANCODE_0: return 0;
+        case SDL_SCANCODE_1: return 1;
+        case SDL_SCANCODE_2: return 2;
+        case SDL_SCANCODE_3: return 3;
+        case SDL_SCANCODE_4: return 4;
+        case SDL_SCANCODE_5: return 5;
+        case SDL_SCANCODE_6: return 6;
+        case SDL_SCANCODE_7: return 7;
+        case SDL_SCANCODE_8: return 8;
+        case SDL_SCANCODE_9: return 9;
+        case SDL_SCANCODE_A: return 10;
+        case SDL_SCANCODE_B: return 11;
+        case SDL_SCANCODE_C: return 12;
+        case SDL_SCANCODE_D: return 13;
+        case SDL_SCANCODE_E: return 14; 
+        case SDL_SCANCODE_F: return 15;
+        default: return -1;
+    };
+}
+
 //=================================[ MA_IN ]=================================//
 int main(int argc, char** argv) {
     if (argc != 2) {
@@ -430,6 +465,11 @@ int main(int argc, char** argv) {
         SDL_PollEvent(&event);
         if (event.type == SDL_QUIT)
             break;
+        else if (event.type == SDL_KEYDOWN) {
+            cpu.set_keydown(map_keys(event.key.keysym.scancode));
+        } else if (event.type == SDL_KEYUP) {
+            cpu.set_keyup(map_keys(event.key.keysym.scancode));
+        }
 
         cpu.cycle();
 

@@ -48,7 +48,6 @@ class Cpu
     Display& display;
     Flags flag;
     bool keys[16];
-    int key_pressed_index;
 
 private:
     static void (*instructions[16])(Cpu&, u16);
@@ -77,4 +76,6 @@ public:
     void reset();
     void cycle();
     void open(const std::string& filename);
+    void set_keydown(int key);
+    void set_keyup(int key);
 };
