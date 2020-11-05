@@ -5,6 +5,9 @@
 #include <fstream>
 #include <random>
 
+#define FREQUENCY 60 // Hz
+#define CYCLE_MS (1.0 / FREQUENCY) * 1000
+
 #define unvalid_instr() {\
     std::cerr << "unvalid instruction" << std::endl;\
     std::exit(EXIT_FAILURE); }
@@ -280,6 +283,7 @@ void opcode_F(Cpu& cpu, u16 opcode) {
         case 0x000A:
             for (u8 i = 0; i < 16; i++) {
                 if (cpu.keys[i]) {
+                    cpu.keys[i] = false;
                     cpu.V[x] = i;
                     cpu.PC += 2;
                 }
@@ -354,12 +358,22 @@ void Cpu::reset() {
     std::memset(stack, 0, sizeof(stack));
     flag = Flags::NONE;
     std::memset(keys, false, sizeof(keys));
+    time = SDL_GetTicks();
 }
 
 void Cpu::cycle() {
-    u16 opcode = get_opcode();
-    u16 type = opcode_type(opcode);
-    (*instructions[type])(*this, opcode);
+    Uint32 current_time = SDL_GetTicks();
+    Uint32 elapsed_time = current_time - time;
+    if (elapsed_time >= CYCLE_MS) {
+        if (DT > 0) {
+            DT--;
+        }
+
+        u16 opcode = get_opcode();
+        u16 type = opcode_type(opcode);
+        (*instructions[type])(*this, opcode);
+        time = current_time;
+    }
 }
 
 u16 Cpu::get_opcode() {

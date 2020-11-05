@@ -48,6 +48,7 @@ class Cpu
     Display& display;
     Flags flag;
     bool keys[16];
+    Uint32 time;
 
 private:
     static void (*instructions[16])(Cpu&, u16);
