@@ -80,7 +80,7 @@ void opcode_0(Cpu& cpu, u16 opcode) {
 
         case 0x00EE:
             assert(cpu.SP > 0);
-            cpu.PC = cpu.stack[cpu.SP--];
+            cpu.PC = cpu.stack[--cpu.SP];
             break;
 
         default: 
@@ -178,7 +178,7 @@ void opcode_8(Cpu& cpu, u16 opcode) {
         cpu.V[15] = cpu.V[y] > cpu.V[x] ? 1 : 0;
         cpu.V[x] = cpu.V[y] - cpu.V[x];
         cpu.flag = Flags::NOT_BORROW;
-    } else if (n == 15) {
+    } else if (n == 14) {
         cpu.V[15] = (cpu.V[x] & 0x80) >> 7;
         cpu.V[x] <<= 1;
     } else {
