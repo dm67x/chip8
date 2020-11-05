@@ -13,9 +13,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_subdirectory(extern/SDL2)
 include_directories(extern/SDL2/include)
 
-add_executable(chip8 "chip8.cpp")
+add_executable(chip8 "src/chip8.cpp")
 if (MINGW)
     target_link_libraries(chip8 mingw32 SDL2main SDL2-static)
 else ()
     target_link_libraries(chip8 SDL2main SDL2-static)
 endif ()
+
+target_compile_options(chip8 PRIVATE
+  $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /Wall>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -pedantic -Werror>
+)

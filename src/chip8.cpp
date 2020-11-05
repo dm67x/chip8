@@ -253,10 +253,12 @@ void opcode_D(Cpu& cpu, u16 opcode) {
 
 void opcode_E(Cpu& cpu, u16 opcode) {
     (void)cpu;
+    (void)opcode;
 }
 
 void opcode_F(Cpu& cpu, u16 opcode) {
     (void)cpu;
+    (void)opcode;
 }
 
 void (*Cpu::instructions[16])(Cpu&, u16) = {
@@ -309,10 +311,10 @@ void Cpu::open(const std::string& filename) {
 
 //=================================[ MA_IN ]=================================//
 int main(int argc, char** argv) {
-    // if (argc != 2) {
-    //     std::cerr << "usage: " << argv[0] << " program" << std::endl;
-    //     return EXIT_FAILURE;
-    // }
+    if (argc != 2) {
+        std::cerr << "usage: " << argv[0] << " program" << std::endl;
+        return EXIT_FAILURE;
+    }
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         SDL_LogError(
@@ -349,7 +351,7 @@ int main(int argc, char** argv) {
 
     Display display(renderer);
     Cpu cpu(display);
-    cpu.open("../../roms/ibm.ch8");
+    cpu.open(argv[1]);
 
     SDL_Event event;
     while (true) {
