@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL.h>
+#include <string>
 
 using u8 = unsigned char;
 using u16 = unsigned short;
@@ -11,6 +12,13 @@ using u16 = unsigned short;
 #define opcode_n(opcode) opcode & 0x000F
 #define opcode_addr(opcode) opcode & 0x0FFF
 #define opcode_kk(opcode) opcode & 0x00FF
+
+enum class Flags {
+    NONE,
+    CARRY,
+    NOT_BORROW,
+    COLLISION
+};
 
 class Display 
 {
@@ -38,31 +46,33 @@ class Cpu
     u8 SP;
     u16 stack[16];
     Display& display;
+    Flags flag;
 
 private:
-    static void (*instructions[16])(Cpu&);
+    static void (*instructions[16])(Cpu&, u16);
 
 private:
     u16 get_opcode();
-    friend void opcode_0(Cpu& cpu);
-    friend void opcode_1(Cpu& cpu);
-    friend void opcode_2(Cpu& cpu);
-    friend void opcode_3(Cpu& cpu);
-    friend void opcode_4(Cpu& cpu);
-    friend void opcode_5(Cpu& cpu);
-    friend void opcode_6(Cpu& cpu);
-    friend void opcode_7(Cpu& cpu);
-    friend void opcode_8(Cpu& cpu);
-    friend void opcode_9(Cpu& cpu);
-    friend void opcode_A(Cpu& cpu);
-    friend void opcode_B(Cpu& cpu);
-    friend void opcode_C(Cpu& cpu);
-    friend void opcode_D(Cpu& cpu);
-    friend void opcode_E(Cpu& cpu);
-    friend void opcode_F(Cpu& cpu);
+    friend void opcode_0(Cpu& cpu, u16 opcode);
+    friend void opcode_1(Cpu& cpu, u16 opcode);
+    friend void opcode_2(Cpu& cpu, u16 opcode);
+    friend void opcode_3(Cpu& cpu, u16 opcode);
+    friend void opcode_4(Cpu& cpu, u16 opcode);
+    friend void opcode_5(Cpu& cpu, u16 opcode);
+    friend void opcode_6(Cpu& cpu, u16 opcode);
+    friend void opcode_7(Cpu& cpu, u16 opcode);
+    friend void opcode_8(Cpu& cpu, u16 opcode);
+    friend void opcode_9(Cpu& cpu, u16 opcode);
+    friend void opcode_A(Cpu& cpu, u16 opcode);
+    friend void opcode_B(Cpu& cpu, u16 opcode);
+    friend void opcode_C(Cpu& cpu, u16 opcode);
+    friend void opcode_D(Cpu& cpu, u16 opcode);
+    friend void opcode_E(Cpu& cpu, u16 opcode);
+    friend void opcode_F(Cpu& cpu, u16 opcode);
 
 public:
     Cpu(Display& display);
     void reset();
     void cycle();
+    void open(const std::string& filename);
 };

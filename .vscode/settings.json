@@ -1,6 +1,7 @@
 {
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "files.associations": {
-        "type_traits": "cpp"
+        "type_traits": "cpp",
+        "fstream": "cpp"
     }
 }
