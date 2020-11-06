@@ -455,12 +455,10 @@ int map_keys(SDL_Scancode scancode) {
 
 //=================================[ MA_IN ]=================================//
 int main(int argc, char** argv) {
-    (void)argc;
-    (void)argv;
-    // if (argc != 2) {
-    //     std::cerr << "usage: " << argv[0] << " program" << std::endl;
-    //     return EXIT_FAILURE;
-    // }
+    if (argc != 2) {
+        std::cerr << "usage: " << argv[0] << " program" << std::endl;
+        return EXIT_FAILURE;
+    }
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         SDL_LogError(
@@ -497,8 +495,7 @@ int main(int argc, char** argv) {
 
     Display display(renderer);
     Cpu cpu(display);
-    // cpu.open(argv[1]);
-    cpu.open("../../roms/Random Number Test [Matthew Mikolay, 2010].ch8");
+    cpu.open(argv[1]);
 
     Uint32 old_time = SDL_GetTicks();
     Uint32 current_time = 0;
