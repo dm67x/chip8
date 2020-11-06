@@ -13,6 +13,25 @@
     std::exit(EXIT_FAILURE); }
 
 //=================================[DISPLAY]=================================//
+const u8 FONT_SET[80] = {
+    0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+    0x20, 0x60, 0x20, 0x20, 0x70, // 1
+    0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+    0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+    0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+    0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+    0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+    0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+    0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+    0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+    0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+    0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+    0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+    0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+    0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+    0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+};
+
 Display::Display(SDL_Renderer* renderer) {
     this->renderer = renderer;
     screen = SDL_CreateTexture(
@@ -64,7 +83,7 @@ void Display::render() const {
             r.h = 1;
 
             if (data[y * 64 + x]) {
-                SDL_RenderDrawRect(renderer, &r);
+                //SDL_RenderDrawRect(renderer, &r);
                 SDL_RenderFillRect(renderer, &r);
             }
         }
@@ -235,8 +254,8 @@ void opcode_D(Cpu& cpu, u16 opcode) {
         u8 pixel = cpu.memory[cpu.I + yline];
         for (u8 xline = 0; xline < 8; xline++) {
             if ((pixel & (0x80 >> xline)) != 0) {
-                int xx = cpu.V[x] + xline;
-                int yy = cpu.V[y] + yline;
+                int xx = (cpu.V[x] + xline) % 64;
+                int yy = (cpu.V[y] + yline) % 32;
                 bool p = cpu.display.get(xx, yy);
                 if (p) {
                     cpu.V[15] = 1;
@@ -306,14 +325,14 @@ void opcode_F(Cpu& cpu, u16 opcode) {
             break;
 
         case 0x0029:
-            // TODO: sprite location
+            cpu.I = cpu.V[x] * 5;
             cpu.PC += 2;
             break;
 
         case 0x0033:
-            cpu.memory[cpu.I] = (cpu.V[x] % 1000) / 100;
-            cpu.memory[cpu.I + 1] = (cpu.V[x] % 100) / 10;
-            cpu.memory[cpu.I + 2] = cpu.V[x] % 10;
+            cpu.memory[cpu.I] = cpu.V[x] / 100;
+            cpu.memory[cpu.I + 1] = (cpu.V[x] / 10) % 10;
+            cpu.memory[cpu.I + 2] = (cpu.V[x] % 100) % 10;
             cpu.PC += 2;
             break;
 
@@ -321,7 +340,6 @@ void opcode_F(Cpu& cpu, u16 opcode) {
             for (u16 i = 0; i <= x; i++) {
                 cpu.memory[cpu.I + i] = cpu.V[i];
             }
-            cpu.I += x + 1;
             cpu.PC += 2;
             break;
 
@@ -329,7 +347,6 @@ void opcode_F(Cpu& cpu, u16 opcode) {
             for (u16 i = 0; i <= x; i++) {
                 cpu.V[i] = cpu.memory[cpu.I + i];
             }
-            cpu.I += x + 1;
             cpu.PC += 2;
             break;
 
@@ -351,6 +368,7 @@ Cpu::Cpu(Display& display) : display(display) {
 
 void Cpu::reset() {
     std::memset(memory, 0, sizeof(memory));
+    std::memcpy(memory, FONT_SET, sizeof(FONT_SET));
     std::memset(V, 0, sizeof(V));
     I = 0x0000;
     DT = 0x00;
@@ -437,10 +455,12 @@ int map_keys(SDL_Scancode scancode) {
 
 //=================================[ MA_IN ]=================================//
 int main(int argc, char** argv) {
-    if (argc != 2) {
-        std::cerr << "usage: " << argv[0] << " program" << std::endl;
-        return EXIT_FAILURE;
-    }
+    (void)argc;
+    (void)argv;
+    // if (argc != 2) {
+    //     std::cerr << "usage: " << argv[0] << " program" << std::endl;
+    //     return EXIT_FAILURE;
+    // }
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         SDL_LogError(
@@ -477,7 +497,8 @@ int main(int argc, char** argv) {
 
     Display display(renderer);
     Cpu cpu(display);
-    cpu.open(argv[1]);
+    // cpu.open(argv[1]);
+    cpu.open("../../roms/Random Number Test [Matthew Mikolay, 2010].ch8");
 
     Uint32 old_time = SDL_GetTicks();
     Uint32 current_time = 0;
