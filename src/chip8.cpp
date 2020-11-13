@@ -7,6 +7,7 @@
 
 #define FREQUENCY 60 // Hz
 #define CYCLE_MS (1.0 / FREQUENCY) * 1000
+#define STEPS_PER_CYCLE 10
 
 #define unvalid_instr() {\
     std::cerr << "unvalid instruction" << std::endl;\
@@ -236,8 +237,8 @@ void opcode_C(Cpu& cpu, u16 opcode) {
     u8 kk = opcode_kk(opcode);
     std::random_device rd;
     std::default_random_engine dre(rd());
-    std::uniform_int_distribution<u8> dist(0, 255);
-    u8 value = dist(dre);
+    std::uniform_int_distribution<u16> dist(0, 255);
+    u8 value = static_cast<u8>(dist(dre));
     cpu.V[x] = value & kk;
     cpu.PC += 2;
 }
@@ -380,29 +381,42 @@ void Cpu::reset() {
     std::memset(keys, false, sizeof(keys));
 }
 
-void Cpu::tick() {
+void Cpu::update_timers() {
     if (DT > 0) {
         DT--;
     }
 
     if (ST > 0) {
         ST--;
-        if (ST == 0) {
-            // BEEP!
-        }
     }
 }
 
-void Cpu::cycle() {
+void Cpu::step() {
     u16 opcode = get_opcode();
     u16 type = opcode_type(opcode);
     (*instructions[type])(*this, opcode);
+
+    /*if (flag == Flags::COLLISION) {
+        
+        flag = Flags::NONE;
+    }*/
 }
 
 u16 Cpu::get_opcode() {
     u16 m1 = static_cast<u16>(memory[PC] << 8);
     u16 m2 = static_cast<u16>(memory[PC + 1]);
     return m1 | m2;
+}
+
+void Cpu::tick() {
+    for (int i = 0; i < STEPS_PER_CYCLE; i++) {
+        step();
+    }
+
+    update_timers();
+    if (ST > 0) {
+        // BEEP
+    }
 }
 
 void Cpu::open(const std::string& filename) {
@@ -520,8 +534,6 @@ int main(int argc, char** argv) {
                 default: break;
             }
         }
-
-        cpu.cycle();
 
         current_time = SDL_GetTicks();
         if (current_time - old_time >= CYCLE_MS) {

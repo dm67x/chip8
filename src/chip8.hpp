@@ -53,6 +53,8 @@ private:
     static void (*instructions[16])(Cpu&, u16);
 
 private:
+    void step();
+    void update_timers();
     u16 get_opcode();
     friend void opcode_0(Cpu& cpu, u16 opcode);
     friend void opcode_1(Cpu& cpu, u16 opcode);
@@ -75,7 +77,6 @@ public:
     Cpu(Display& display);
     void reset();
     void tick();
-    void cycle();
     void open(const std::string& filename);
     void set_keydown(int key);
     void set_keyup(int key);

@@ -21,6 +21,6 @@ else ()
 endif ()
 
 target_compile_options(chip8 PRIVATE
-  $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /Wall>
+  $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
   $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -pedantic -Werror>
 )
