@@ -126,14 +126,14 @@ void opcode_2(Cpu& cpu, u16 opcode) {
 void opcode_3(Cpu& cpu, u16 opcode) {
     u16 x = opcode_x(opcode);
     u8 kk = opcode_kk(opcode);
-    assert(x >= 0 && x < 16);
+    assert(x < 16);
     cpu.PC += (cpu.V[x] == kk) ? 4 : 2;
 }
 
 void opcode_4(Cpu& cpu, u16 opcode) {
     u16 x = opcode_x(opcode);
     u8 kk = opcode_kk(opcode);
-    assert(x >= 0 && x < 16);
+    assert(x < 16);
     cpu.PC += (cpu.V[x] != kk) ? 4 : 2;
 }
 
@@ -145,15 +145,15 @@ void opcode_5(Cpu& cpu, u16 opcode) {
         unvalid_instr();
         return;
     }
-    assert(x >= 0 && x < 16);
-    assert(y >= 0 && y < 16);
+    assert(x < 16);
+    assert(y < 16);
     cpu.PC += (cpu.V[x] == cpu.V[y]) ? 4 : 2;
 }
 
 void opcode_6(Cpu& cpu, u16 opcode) {
     u16 x = opcode_x(opcode);
     u8 kk = opcode_kk(opcode);
-    assert(x >= 0 && x < 16);
+    assert(x < 16);
     cpu.V[x] = kk;
     cpu.PC += 2;
 }
@@ -161,7 +161,7 @@ void opcode_6(Cpu& cpu, u16 opcode) {
 void opcode_7(Cpu& cpu, u16 opcode) {
     u16 x = opcode_x(opcode);
     u8 kk = opcode_kk(opcode);
-    assert(x >= 0 && x < 16);
+    assert(x < 16);
     cpu.V[x] = opcode_kk((cpu.V[x] + kk));
     cpu.PC += 2;
 }
@@ -170,8 +170,8 @@ void opcode_8(Cpu& cpu, u16 opcode) {
     u16 x = opcode_x(opcode);
     u16 y = opcode_y(opcode);
     u8 n = opcode_n(opcode);
-    assert(x >= 0 && x < 16);
-    assert(y >= 0 && y < 16);
+    assert(x < 16);
+    assert(y < 16);
 
     if (n == 0) {
         cpu.V[x] = cpu.V[y];
@@ -210,8 +210,8 @@ void opcode_8(Cpu& cpu, u16 opcode) {
 void opcode_9(Cpu& cpu, u16 opcode) {
     u16 x = opcode_x(opcode);
     u16 y = opcode_y(opcode);
-    assert(x >= 0 && x < 16);
-    assert(y >= 0 && y < 16);
+    assert(x < 16);
+    assert(y < 16);
     u8 n = opcode_n(opcode);
     if (n != 0) {
         unvalid_instr();
@@ -233,7 +233,7 @@ void opcode_B(Cpu& cpu, u16 opcode) {
 
 void opcode_C(Cpu& cpu, u16 opcode) {
     u16 x = opcode_x(opcode);
-    assert(x >= 0 && x < 16);
+    assert(x < 16);
     u8 kk = opcode_kk(opcode);
     std::random_device rd;
     std::default_random_engine dre(rd());
@@ -245,9 +245,9 @@ void opcode_C(Cpu& cpu, u16 opcode) {
 
 void opcode_D(Cpu& cpu, u16 opcode) {
     u16 x = opcode_x(opcode);
-    assert(x >= 0 && x < 16);
+    assert(x < 16);
     u16 y = opcode_y(opcode);
-    assert(y >= 0 && y < 16);
+    assert(y < 16);
     u8 n = opcode_n(opcode);
 
     cpu.V[15] = 0;
@@ -272,7 +272,7 @@ void opcode_D(Cpu& cpu, u16 opcode) {
 
 void opcode_E(Cpu& cpu, u16 opcode) {
     u16 x = opcode_x(opcode);
-    assert(x >= 0 && x < 16);
+    assert(x < 16);
     u16 type = opcode_kk(opcode);
     switch (type) {
         case 0x009E:
@@ -292,7 +292,7 @@ void opcode_E(Cpu& cpu, u16 opcode) {
 
 void opcode_F(Cpu& cpu, u16 opcode) {
     u16 x = opcode_x(opcode);
-    assert(x >= 0 && x < 16);
+    assert(x < 16);
     u16 type = opcode_kk(opcode);
 
     switch (type) {
