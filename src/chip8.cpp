@@ -13,6 +13,13 @@
     std::cerr << "unvalid instruction" << std::endl;\
     std::exit(EXIT_FAILURE); }
 
+#define opcode_type(opcode) (opcode & 0xF000) >> 12
+#define opcode_x(opcode) (opcode & 0x0F00) >> 8
+#define opcode_y(opcode) (opcode & 0x00F0) >> 4
+#define opcode_n(opcode) opcode & 0x000F
+#define opcode_addr(opcode) opcode & 0x0FFF
+#define opcode_kk(opcode) opcode & 0x00FF
+
 //=================================[DISPLAY]=================================//
 const u8 FONT_SET[80] = {
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -52,7 +59,7 @@ Display::Display(SDL_Renderer* renderer) {
     clear();
 }
 
-void Display::dispose() {
+Display::~Display() {
     SDL_DestroyTexture(screen);
 }
 
@@ -507,8 +514,8 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    Display display(renderer);
-    Cpu cpu(display);
+    Display* display = new Display(renderer);
+    Cpu cpu(*display);
     cpu.open(argv[1]);
 
     Uint32 old_time = SDL_GetTicks();
@@ -542,11 +549,11 @@ int main(int argc, char** argv) {
         }
 
         SDL_RenderClear(renderer);
-        display.render();
+        display->render();
         SDL_RenderPresent(renderer);
     }
 
-    display.dispose();
+    delete display;
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

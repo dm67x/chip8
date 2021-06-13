@@ -6,13 +6,6 @@
 using u8 = unsigned char;
 using u16 = unsigned short;
 
-#define opcode_type(opcode) (opcode & 0xF000) >> 12
-#define opcode_x(opcode) (opcode & 0x0F00) >> 8
-#define opcode_y(opcode) (opcode & 0x00F0) >> 4
-#define opcode_n(opcode) opcode & 0x000F
-#define opcode_addr(opcode) opcode & 0x0FFF
-#define opcode_kk(opcode) opcode & 0x00FF
-
 enum class Flags {
     NONE,
     CARRY,
@@ -28,7 +21,7 @@ class Display
 
 public:
     Display(SDL_Renderer* renderer);
-    void dispose();
+    ~Display();
     void set(int x, int y, bool value);
     bool get(int x, int y) const;
     void clear();
